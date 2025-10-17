@@ -3,9 +3,9 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?logo=python)](https://www.python.org/downloads/)
 [![SymPy](https://img.shields.io/badge/SymPy-1.12%2B-orange?logo=sympy)](https://www.sympy.org/en/index.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Stars](https://img.shields.io/github/stars/yourusername/terminal-graphing-calc?style=social)](https://github.com/kaustubhxyz/Graphing-Calculator)
-[![Forks](https://img.shields.io/github/forks/yourusername/terminal-graphing-calc?style=social)](https://github.com/kaustubhxyz/Graphing-Calculator)
-[![Issues](https://img.shields.io/github/issues/yourusername/terminal-graphing-calc?style=flat)](https://github.com/kaustubhxyz/Graphing-Calculator/issues)
+[![Stars](https://img.shields.io/github/stars/yourusername/terminal-graphing-calc?style=social)](https://github.com/kaustubhxyz/Graphing-Calculator/)
+[![Forks](https://img.shields.io/github/forks/yourusername/terminal-graphing-calc?style=social)](https://github.com/kaustubhxyz/Graphing-Calculator/)
+[![Issues](https://img.shields.io/github/issues/yourusername/terminal-graphing-calc?style=flat)](https://github.com/kaustubhxyz/Graphing-Calculator/issues/)
 
 A **powerful, fully interactive terminal-based graphing calculator**, built with Python, `curses` for the TUI, and `sympy` for symbolic math. Plot functions, parametric equations, polar curves, 3D projections, and more—all in your terminal! Supports live editing, animations, derivatives, intersections, and multi-color ASCII plots. No GUI needed—just pure text magic. 🌟
 
