@@ -86,10 +86,10 @@ EXAMPLE_EXPRESSIONS = {
         "z=sin(x + phase)*cos(y)",  # Saddle wave
     ],
     "functions": [
-        "abs(sin(x + phase))",
-        "exp(-a*x**2)*cos(b*x + phase)",  # Breathing Gaussian
-        "1/(1 + exp(-a*x))",  # Pulsing Sigmond
-        "a*sin(x) + b*cos(2*x + phase)",  # Wave Superposition
+        "abs(sin(x))",
+        "1/(1 + exp(-x))",  # Sigmoid
+        "x*sin(1/x)",  # Pathological
+        "floor(x) + 0.5*sin(pi*x)",  # Step function
     ]
 }
 
@@ -828,8 +828,9 @@ def draw_footer(stdscr):
         pass
 
 def draw_screen(stdscr):
-    """Main draw function"""
-    stdscr.clear()
+    """Main draw function - optimized to prevent flicker"""
+    # Don't clear entire screen - use erase instead
+    stdscr.erase()  # Less aggressive than clear()
     
     row = 3
     draw_header(stdscr)
@@ -1052,41 +1053,69 @@ def animate_phase(stdscr):
     global params, animating, status_msg
     
     stdscr.nodelay(True)
-    stdscr.timeout(10)
     status_msg = "🎬 Animating..."
     
     frame_count = 0
+    last_frame_time = time.time()
     
     while animating:
-        params['phase'] = (params['phase'] + 0.2) % (2 * math.pi)  # Faster increment
+        current_time = time.time()
+        
+        # Frame rate limiting (target 20 FPS = 0.05s per frame)
+        if current_time - last_frame_time < anim_speed:
+            time.sleep(0.01)  # Small sleep to prevent busy-waiting
+            
+            # Check for key press during sleep
+            try:
+                key = stdscr.getch()
+                if key != -1 and (key == ord('w') or key == ord('W') or key == 27):
+                    animating = False
+                    status_msg = "Stopped"
+                    params['a'] = 1.5
+                    params['b'] = 1.0
+                    break
+            except:
+                pass
+            continue
+        
+        last_frame_time = current_time
+        
+        # Update parameters
+        params['phase'] = (params['phase'] + 0.2) % (2 * math.pi)
         params['c'] = params['phase']
         params['t'] = params['t'] + 0.08
         
-        # Vary parameters for different animation effects
-        params['a'] = 1.0 + 0.8 * math.sin(params['t'])
+        # Vary parameters for animation effects
+        params['a'] = 1.5 + 0.8 * math.sin(params['t'])
         params['b'] = 1.0 + 0.6 * math.cos(params['t'] * 0.7)
         params['r'] = 1.0 + 0.3 * math.cos(params['t'] * 0.5)
         
-        # Only redraw every frame (already optimized)
-        draw_screen(stdscr)
+        # Redraw with erase instead of clear
+        stdscr.erase()
+        row = 3
+        draw_header(stdscr)
+        row = draw_expressions(stdscr, row)
+        row = draw_params(stdscr, row)
+        row = draw_plot(stdscr, row)
+        draw_footer(stdscr)
+        stdscr.refresh()
+        
         frame_count += 1
         
+        # Check for interrupt
         try:
             key = stdscr.getch()
             if key != -1:
                 if key == ord('w') or key == ord('W') or key == 27:
                     animating = False
                     status_msg = "Stopped"
-                    params['a'] = 1.0
+                    params['a'] = 1.5
                     params['b'] = 1.0
                     break
         except:
             pass
-        
-        time.sleep(anim_speed)
     
     stdscr.nodelay(False)
-    stdscr.timeout(-1)
 
 # ============================================================================
 # MAIN LOOP
@@ -1096,6 +1125,12 @@ def init_colors():
     """Initialize color pairs"""
     curses.start_color()
     curses.use_default_colors()
+    
+    # Enable double buffering if available
+    try:
+        curses.curs_set(0)
+    except:
+        pass
     
     curses.init_pair(COLOR_HEADER, curses.COLOR_CYAN, -1)
     curses.init_pair(COLOR_EXPR, curses.COLOR_WHITE, -1)
@@ -1112,10 +1147,13 @@ def main(stdscr):
     """Main application loop"""
     global cursor_pos, status_msg, edit_mode, animating
     
-    curses.curs_set(0)
+    curses.curs_set(0)  # Hide cursor
+    stdscr.keypad(True)  # Enable keypad mode
+    curses.cbreak()      # React to keys without Enter
+    stdscr.nodelay(False)  # Blocking mode by default
+    
     init_colors()
     stdscr.clear()
-    stdscr.timeout(50)  # Faster response - 50ms
     
     cursor_pos = len(expressions[current_line])
     status_msg = "Welcome! W=animate | E=examples | C=categories"
@@ -1123,36 +1161,48 @@ def main(stdscr):
     # Draw initial screen
     draw_screen(stdscr)
     
+    last_key_time = time.time()
+    needs_redraw = False
+    
     while True:
-        # Only redraw if not animating (animation handles its own draws)
-        if not animating:
+        # Only redraw if needed (reduces flicker)
+        if needs_redraw and not animating:
             draw_screen(stdscr)
+            needs_redraw = False
         
         if animating:
             animate_phase(stdscr)
+            needs_redraw = True
             continue
         
         try:
+            stdscr.timeout(100)  # 100ms timeout
             key = stdscr.getch()
             if key == -1:  # No key pressed
                 continue
         except:
             continue
         
+        # Process input
         if key == 27:  # ESC
             if edit_mode:
                 edit_mode = False
                 status_msg = "Edit cancelled"
+                needs_redraw = True
             else:
                 break
         elif key in [curses.KEY_UP, curses.KEY_DOWN, curses.KEY_LEFT, curses.KEY_RIGHT]:
             handle_navigation(key)
+            needs_redraw = True
         elif edit_mode and (32 <= key <= 126 or key in [curses.KEY_BACKSPACE, 127, 8, curses.KEY_DC]):
             handle_editing(key)
+            needs_redraw = True
         elif key in [ord('+'), ord('='), ord('-'), ord('_'), ord('l'), ord('L'), ord('r'), ord('R')]:
             handle_zoom_pan(key)
+            needs_redraw = True
         else:
             handle_special_commands(key)
+            needs_redraw = True
 
 def run():
     """Entry point"""
