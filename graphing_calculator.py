@@ -79,10 +79,10 @@ EXAMPLE_EXPRESSIONS = {
         "z=sin(x + phase)*cos(y)",  # Saddle wave
     ],
     "functions": [
-        "abs(sin(x))",
-        "1/(1 + exp(-x))",  # Sigmoid
-        "x*sin(1/x)",  # Pathological
-        "floor(x) + 0.5*sin(pi*x)",  # Step function
+        "abs(sin(x + phase))",
+        "1/(1 + exp(-a*x))",  # Sigmoid
+        "exp(-a*x**2)*cos(b*x + phase)",  # Breathing Gaussian
+        "a*sin(x) + b*cos(2*x + phase)",  # Wave Superposition
     ]
 }
 
