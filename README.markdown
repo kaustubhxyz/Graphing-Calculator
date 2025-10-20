@@ -55,8 +55,7 @@ A **powerful, fully interactive terminal-based graphing calculator**, built with
 
 2. **Install Dependencies** (Python 3.8+ required):
    ```bash
-   pip install sympy
-   # On Windows: pip install windows-curses
+   pip install -r requirements.txt
    ```
 
 3. **Run**:
