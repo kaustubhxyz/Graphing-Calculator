@@ -1,0 +1,2 @@
+sympy>=1.12
+windows-curses  # Optional: Only for Windows users
