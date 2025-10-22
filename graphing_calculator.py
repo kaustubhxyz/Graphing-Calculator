@@ -4,6 +4,7 @@ import time
 import io
 from contextlib import redirect_stdout
 import math
+import platform
 
 try:
     import sympy as sp
@@ -12,6 +13,17 @@ try:
 except ImportError:
     print("Error: sympy is required. Install with: pip install sympy")
     sys.exit(1)
+
+try:
+    import curses
+except ImportError:
+    if platform.system() == "win32":
+        print("windows-curses is being installed on win-32")
+        sys.exit(1)
+    else:
+        print("Note: 'curses' is built-in on your OS (Linux/Mac). No action needed! If issues, ensure your terminal supports it.")
+        # On non-Windows, re-raise if truly missing (rare)
+        raise
 
 # ============================================================================
 # GLOBAL STATE
